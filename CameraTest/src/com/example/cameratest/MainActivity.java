@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -16,15 +17,18 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
+	private ImageButton button;
 
-	Uri imageFileUri;
-
+	private Uri imageFileUri;
+	private TextView tv;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		ImageButton button = (ImageButton) findViewById(R.id.TakeAPhoto);
+		button = (ImageButton) findViewById(R.id.TakeAPhoto);
+		tv = (TextView)findViewById(R.id.status);
+		Log.d("is this null?", "" + (tv == null));
 		OnClickListener listener = new OnClickListener() {
 			public void onClick(View v) {
 				takeAPhoto();
@@ -58,12 +62,16 @@ public class MainActivity extends Activity {
 		if (!folderF.exists()) {
 			folderF.mkdir();
 		}
+		
+		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
 		// Create an URI for the picture file
 		String imageFilePath = folder + "/"
 				+ String.valueOf(System.currentTimeMillis()) + ".jpg";
 		File imageFile = new File(imageFilePath);
 		imageFileUri = Uri.fromFile(imageFile);
+		intent.putExtra(MediaStore.EXTRA_OUTPUT,imageFileUri);
+		startActivityForResult(intent,CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
 
 		// TODO: Put in the intent in the tag MediaStore.EXTRA_OUTPUT the URI
 		
@@ -72,7 +80,20 @@ public class MainActivity extends Activity {
 		
 	}
 
+	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE){
+			if (resultCode == RESULT_OK){
+				tv.setText("Result:OK!");
+				Drawable drawable = Drawable.createFromPath(imageFileUri.getPath());
+				button.setImageDrawable(drawable);
+			}else if (resultCode == RESULT_CANCELED){
+				tv.setText("Result:Cancaled");
+			}else{
+				tv.setText("Result:???????");
+				
+			}
+		}
 		// TODO: Handle the results from CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE
 		
 		// TODO: Handle the cases for RESULT_OK, RESULT_CANCELLED, and others
